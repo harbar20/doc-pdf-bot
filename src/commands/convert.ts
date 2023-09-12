@@ -1,15 +1,9 @@
-import {
-    SlashCommandAttachmentOption,
-    SlashCommandBuilder,
-    Attachment,
-} from "discord.js";
-import axios from "axios";
+import { SlashCommandAttachmentOption, SlashCommandBuilder } from "discord.js";
 import fs from "fs";
-import path from "node:path";
-import * as unoconv from "awesome-unoconv";
 import { Command } from "../types";
+import convert from "../convert";
 
-const convert: Command = {
+const convertCommand: Command = {
     data: new SlashCommandBuilder()
         .addAttachmentOption(
             new SlashCommandAttachmentOption()
@@ -25,40 +19,24 @@ const convert: Command = {
         const inputFilePath = `${interaction.id}.docx`;
         const outputFilePath = `${interaction.id}-out.pdf`;
 
+        if (!file) {
+            await interaction.reply(":x: File not found. Please try again.");
+            return;
+        }
+
         await interaction.deferReply();
 
-        await axios
-            .get(file ?? "", {
-                responseType: "stream",
-            })
-            .then(async (response) => {
-                // Pipe the response stream to a writable stream to save it as a local file
-                await response.data.pipe(
-                    fs.createWriteStream(`${interaction.id}.docx`)
-                );
-
-                // Listen for the 'close' event to know when the file has been saved
-                await response.data.on("close", async () => {
-                    console.log(
-                        `File "${interaction.id}.docx" has been saved.`
-                    );
-
-                    await unoconv.convert(
-                        path.resolve(inputFilePath),
-                        path.resolve(outputFilePath)
-                    );
-
-                    await interaction.editReply({
-                        files: [outputFilePath],
-                    });
-
-                    fs.unlinkSync(inputFilePath);
-                    fs.unlinkSync(outputFilePath);
-                });
+        convert(file, inputFilePath, outputFilePath, async () => {
+            await interaction.editReply({
+                files: [outputFilePath],
             });
+
+            fs.unlinkSync(inputFilePath);
+            fs.unlinkSync(outputFilePath);
+        });
     },
 };
 
-export default convert;
+export default convertCommand;
 
 const builder = new SlashCommandBuilder();
