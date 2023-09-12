@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits } from "discord.js";
+import { Client, CommandInteractionOptionResolver, GatewayIntentBits } from "discord.js";
 import * as dotenv from "dotenv";
 import { commands } from "./commands";
 
@@ -16,14 +16,13 @@ client.on("interactionCreate", async (interaction) => {
   if (interaction.isCommand()) {
     //Getting info from the message if it's not a live link
     const commandName = interaction.commandName;
-    const options = interaction.options;
 
     //Getting the actual command
     const command = commands.get(commandName);
     if (!command) return;
 
     //Running the command
-    await command.execute(interaction, options, client);
+    await command.execute(interaction, client);
   }
 });
 

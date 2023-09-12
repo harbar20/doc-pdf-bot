@@ -9,7 +9,6 @@ type Command = {
     data: SlashCommandBuilder;
     execute: (
         interaction: CommandInteraction,
-        options: any,
         client: Client
     ) => Promise<void>;
 };
